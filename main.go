@@ -1,14 +1,18 @@
 package main
 
 import (
+	"chat/db"
 	"chat/server"
 	"log"
 	"net/http"
 )
 
 func main() {
-	v := server.NewServer()
-	log.Println("Сервак жгёт ✅ ")
 
-	log.Fatal(http.ListenAndServe(":8081", v))
+	db.InitDB()
+
+	m := server.NewServer()
+
+	log.Println("🔥 Сервак зажог!")
+	log.Fatal(http.ListenAndServe(":8081", m))
 }

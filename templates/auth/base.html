@@ -22,18 +22,8 @@
       {{ block "logo" . }}{{ end }}
 
       <div id="content">
-        <p>hello</p>
+        <p>Добнро пожаловать в чат!</p>
         <form hx-post="/start" hx-target="#content" hx-swap="innerHTML">
-
-          <h1>Preparation for Launch</h1>
-          <p>Captain, awaiting your orders — we’re ready to lift off!</p>
-
-          <!-- Honeypot-поля (сдвинутые за пределы экрана) -->
-          <input type="text" name="hp_code" autocomplete="off" style="position:absolute; left:-5000px; top:-5000px;">
-          <input type="text" name="hp_secret" autocomplete="off" style="position:absolute; left:-5000px; top:-5000px;">
-
-
-
           <button type="submit">Next</button>
         </form>
       </div>

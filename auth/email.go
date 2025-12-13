@@ -22,10 +22,10 @@ func validateEmail(email string) (bool, string) {
 	}
 
 	// базовая проверка на email
-	emailRegexp := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@gmail\.com$`)
+	emailRegexp := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 	if !emailRegexp.MatchString(email) {
-		log.Println("[validateEmail] ❌ Недопустимый email (не @gmail.com)")
-		return false, "⚠️ Только @gmail.com"
+		log.Println("[validateEmail] ❌ Недопустимый email")
+		return false, "⚠️ Неверный формат email"
 	}
 
 	log.Println("[validateEmail] ✅ Email валиден")
@@ -38,7 +38,7 @@ func EmailHandler(tmpl *template.Template) http.HandlerFunc {
 		log.Println("[ShowEmailFormHandler] GET /email")
 
 		data := emailData{
-			Status: "Введите @gmail.com",
+			Status: "Введите email@gmail.com",
 			Valid:  false,
 		}
 
