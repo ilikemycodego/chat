@@ -1,0 +1,36 @@
+
+
+.plan {
+  position: relative;
+  width: calc(2 * 13px + 1px);
+  height: calc(2 * 13px + 1px);
+
+  /* задаём анимацию вращения */
+  animation: slow-rotate 20s linear infinite;
+  transform-origin: center; /* вращение вокруг центра */
+}
+
+@keyframes slow-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); } /* поворот на 90° за 60 секунд */
+}
+
+/* остальные стили остаются без изменений */
+.square {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  position: absolute;
+}
+
+.tl { top: 0; left: 0; background: #e53935; }
+.tr { top: 0; right: 0; background: #1e88e5; }
+.bl { bottom: 0; left: 0; background: #2e7d32; }
+.br { bottom: 0; right: 0; background: #ffb300; }
+.center {
+  background: #6a1b9a;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 3px;
+}
