@@ -1,0 +1,33 @@
+<!--  -->
+
+
+
+
+
+
+
+
+<!--  -->
+{{ define "email" }}
+
+<div>&nbsp;</div>
+
+<form id="email-form" method="POST" hx-post="/save-email" hx-target="#email-form-container" hx-swap="outerHTML">
+
+
+
+    <div id="mail-form-container">
+        <label for="email">Enter email:</label><br>
+        <br>
+        <input type="text" id="email" name="email" value="{{.Email}}" placeholder="@gmail.com" minlength="13"
+            maxlength="50" hx-post="/chec-email" hx-trigger="keyup changed delay:300ms" hx-target="#check__email"
+            hx-swap="innerHTML">
+
+
+
+        {{ template "check__email" . }}
+    </div>
+</form>
+
+<button hx-post="/" hx-target="body" hx-swap="innerHTML">Back</button>
+{{ end }}

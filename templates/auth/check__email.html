@@ -1,0 +1,30 @@
+<!--  -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--  -->
+{{ define "check__email" }}
+<div id="check__email">
+    <div id="maily-status">{{.Status}}</div>
+    <div id="save-btn-container">
+        <br>
+        <button type="submit" {{if not .Valid}}disabled{{end}}>Save email</button>
+    </div>
+</div>
+{{ end }}

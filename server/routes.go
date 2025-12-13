@@ -11,6 +11,8 @@ import (
 func RegisterRoutes(m *mux.Router, tmpl *template.Template) {
 	// Основной маршрут
 	m.HandleFunc("/", auth.BaseHandler(tmpl))
+	m.HandleFunc("/start", auth.EmailHandler(tmpl))
+	m.HandleFunc("/chec-email", auth.EmailCheckHandler(tmpl))
 
 	m.HandleFunc("/theme", auth.ToggleThemeHandler)
 

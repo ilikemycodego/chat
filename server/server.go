@@ -3,24 +3,26 @@ package server
 import (
 	"html/template"
 	"log"
+
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
-// NewServer собирает все шаблоны и маршруты
+// NewServer собирает все шаблоны, роуты и возвращает готовый mux
 func NewServer() http.Handler {
-	// Загружаем все шаблоны из templates/**/*
+	// Загружаем все шаблоны
 	tmpl := template.Must(template.ParseGlob("templates/**/*.html"))
 
+	// Инициализируем роутер
 	m := mux.NewRouter()
 
-	// Обслуживание статики
+	// Обслуживаем статику
 	m.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	// Регистрируем все маршруты, включая /theme
+	// Подключаем маршруты
 	RegisterRoutes(m, tmpl)
 
-	log.Println("✅ Сервер готов!")
+	log.Println("✅ Gorilla mux готов!")
 	return m
 }
