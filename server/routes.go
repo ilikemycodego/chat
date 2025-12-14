@@ -2,6 +2,7 @@ package server
 
 import (
 	"chat/auth"
+	"chat/middleware"
 	"html/template"
 
 	"github.com/gorilla/mux"
@@ -9,15 +10,17 @@ import (
 
 // RegisterRoutes регистрирует все маршруты
 func RegisterRoutes(m *mux.Router, tmpl *template.Template) {
+
 	// Основной маршрут
-	m.HandleFunc("/", auth.BaseHandler(tmpl))
+
+	m.Handle("/", middleware.UserContextMiddleware(auth.BaseHandler(tmpl)))
 	m.HandleFunc("/start", auth.EmailHandler(tmpl))
 	m.HandleFunc("/check-email", auth.EmailCheckHandler(tmpl))
 
 	m.HandleFunc("/theme", auth.ToggleThemeHandler)
 
-	m.HandleFunc("/get-password", auth.GetCodHandler(tmpl))
-	m.HandleFunc("/verify-code", auth.VerifyCodeHandler(tmpl))
+	m.HandleFunc("/get-password", auth.GetCodeHandler(tmpl))
+	m.HandleFunc("/verify-code", auth.VerifyCodeHandler())
 
 	// Пример дополнительных маршрутов:
 	// r.HandleFunc("/login", auth.LoginHandler(tmpl))

@@ -4,13 +4,14 @@ import (
 	"chat/db"
 	"chat/token"
 	"context"
+	"errors"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 // Проверка одноразового кода
@@ -31,8 +32,12 @@ func verifyCode(email, code string) (bool, error) {
 	`, email, code).Scan(&id)
 
 	if err != nil {
-		// нет строк → код неверный / истёк / уже использован
-		return false, nil
+		// код не найден / уже использован / истёк
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, nil
+		}
+		// реальная ошибка БД
+		return false, err
 	}
 
 	return true, nil
@@ -65,34 +70,44 @@ func getOrCreateUser(email string) (string, error) {
 
 	var id string
 
-	// Ищем пользователя
+	// пробуем найти
 	err := db.DB.QueryRow(ctx,
-		"SELECT id FROM users WHERE email=$1 LIMIT 1",
+		`SELECT id FROM users WHERE email = $1`,
 		email,
 	).Scan(&id)
 
-	// Если найден — возвращаем
 	if err == nil {
 		return id, nil
 	}
 
-	// Создаём нового пользователя amigo
+	// создаём (без падения при гонке)
 	newID := uuid.New().String()
 
 	_, err = db.DB.Exec(ctx, `
 		INSERT INTO users (id, email, name)
 		VALUES ($1, $2, 'amigo')
+		ON CONFLICT (email) DO NOTHING
 	`, newID, email)
+	if err != nil {
+		return "", err
+	}
+
+	// гарантированно получаем id
+	err = db.DB.QueryRow(ctx,
+		`SELECT id FROM users WHERE email = $1`,
+		email,
+	).Scan(&id)
 
 	if err != nil {
 		return "", err
 	}
 
-	return newID, nil
+	return id, nil
 }
 
 // Верификация кода + создание пользователя + создание сессии
-func VerifyCodeHandler(tmpl *template.Template) http.HandlerFunc {
+
+func VerifyCodeHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		email := r.FormValue("email")
@@ -132,7 +147,7 @@ func VerifyCodeHandler(tmpl *template.Template) http.HandlerFunc {
 		}
 
 		// 3️⃣ Генерируем JWT только с sessionID
-		token, err := token.GenerateJWT(sessionID, token.ExpirationTime())
+		jwtToken, err := token.GenerateJWT(sessionID, token.ExpirationTime())
 		if err != nil {
 			log.Println("[VerifyCodeHandler] Ошибка GenerateJWT:", err)
 			fmt.Fprint(w, "Ошибка сервера")
@@ -141,9 +156,11 @@ func VerifyCodeHandler(tmpl *template.Template) http.HandlerFunc {
 
 		// 4️⃣ Устанавливаем cookie
 		http.SetCookie(w, &http.Cookie{
-			Name:     "auth",
-			Value:    token,
+			Name:     "jwtAuth",
+			Value:    jwtToken,
 			HttpOnly: true,
+			Secure:   true, // если HTTPS
+			SameSite: http.SameSiteLaxMode,
 			Path:     "/",
 			MaxAge:   7 * 24 * 3600,
 		})

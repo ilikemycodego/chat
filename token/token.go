@@ -66,24 +66,28 @@ func GenerateJWT(sessionID string, expiration time.Time) (string, error) {
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return jwtToken.SignedString(jwtSecret)
 }
 
 // ParseJWT — разбирает токен и возвращает Claims
 func ParseJWT(tokenStr string) (*Claims, error) {
 	once.Do(loadSecret)
 
-	tok, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+	tok, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("неверный метод подписи")
+		}
 		return jwtSecret, nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	if claims, ok := tok.Claims.(*Claims); ok && tok.Valid {
-		return claims, nil
+	claims, ok := tok.Claims.(*Claims)
+	if !ok || !tok.Valid {
+		return nil, errors.New("неверный токен")
 	}
 
-	return nil, errors.New("неверный токен")
+	return claims, nil
 }

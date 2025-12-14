@@ -28,6 +28,24 @@ func generateCode() string {
 	return fmt.Sprintf("%06d", n.Int64())
 }
 
+func canSendCode(email string) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var count int
+	err := db.DB.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM auth_codes
+		WHERE email=$1 AND created_at > NOW() - INTERVAL '1 hour'
+	`, email).Scan(&count)
+
+	if err != nil {
+		return false, err
+	}
+
+	return count < 10, nil // максимум 5 кодов в час
+}
+
 // Сохраняем код для email в таблицу auth_codes
 func saveCode(email, code string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -45,6 +63,10 @@ func saveCode(email, code string) error {
 func sendCode(email, code string) error {
 	apiKey := os.Getenv("MAILERSEND_API_KEY")
 	fromEmail := os.Getenv("FROM_EMAIL")
+
+	if apiKey == "" || fromEmail == "" {
+		return fmt.Errorf("MAILERSEND_API_KEY или FROM_EMAIL не заданы")
+	}
 
 	log.Println("[sendCode] MailerSend инициализирован")
 	log.Println("[sendCode] Отправитель:", fromEmail)
@@ -82,13 +104,24 @@ func sendCode(email, code string) error {
 
 //-------------------------
 
-func GetCodHandler(tmpl *template.Template) http.HandlerFunc {
+func GetCodeHandler(tmpl *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// Получаем email из формы
 		email := r.FormValue("email")
 		if email == "" {
 			fmt.Fprint(w, "Введите email!")
+			return
+		}
+
+		// Проверяем, можно ли отправлять код
+		ok, err := canSendCode(email)
+		if err != nil {
+			http.Error(w, "Ошибка сервера", 500)
+			return
+		}
+		if !ok {
+			fmt.Fprint(w, "Слишком много запросов, попробуйте позже")
 			return
 		}
 
@@ -110,7 +143,7 @@ func GetCodHandler(tmpl *template.Template) http.HandlerFunc {
 		}
 
 		// --- рендерим форму для ввода кода/пароля ---
-		if err := tmpl.ExecuteTemplate(w, "get__cod", map[string]string{"Email": email}); err != nil {
+		if err := tmpl.ExecuteTemplate(w, "get__code", map[string]string{"Email": email}); err != nil {
 			log.Printf("[GetPasswordHandler] ❌ Ошибка шаблона: %v", err)
 			http.Error(w, "Ошибка отображения страницы", http.StatusInternalServerError)
 			return

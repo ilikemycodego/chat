@@ -56,6 +56,11 @@ func EmailCheckHandler(tmpl *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("[ValidateEmailHandler] POST /validate-email")
 
+		if r.Method != http.MethodPost {
+			http.Error(w, "Метод не разрешён", http.StatusMethodNotAllowed)
+			return
+		}
+
 		email := r.FormValue("email") // оставил "key" для совместимости с формой
 		log.Printf("[ValidateEmailHandler] Получен email: %q\n", email)
 

@@ -21,12 +21,29 @@
     <div class="main">
       {{ block "logo" . }}{{ end }}
 
+      <!-- Контент: видим только если пользователь не залогинен -->
+      {{if not .Name}}
+
       <div id="content">
         <p>Добнро пожаловать в чат!</p>
         <form hx-post="/start" hx-target="#content" hx-swap="innerHTML">
           <button type="submit">Next</button>
         </form>
       </div>
+
+      {{end}}
+
+      <!-- Приветствие и меню: видим только если пользователь залогинен -->
+      {{if .Name}}
+
+      <div class="greeting">
+        <span>{{.Name}}</span><span>&#9881;</span>
+
+
+      </div>
+
+      <div class="content" id="content"></div>
+      {{end}}
     </div>
   </div>
 
