@@ -43,7 +43,7 @@ func canSendCode(email string) (bool, error) {
 		return false, err
 	}
 
-	return count < 10, nil // максимум 5 кодов в час
+	return count < 5, nil // максимум 5 кодов в час
 }
 
 // Сохраняем код для email в таблицу auth_codes

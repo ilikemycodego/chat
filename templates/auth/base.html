@@ -20,12 +20,14 @@
   <div class="band">
     <div class="main">
       {{ block "logo" . }}{{ end }}
+      <br>
 
       <!-- Контент: видим только если пользователь не залогинен -->
       {{if not .Name}}
 
       <div id="content">
-        <p>Добнро пожаловать в чат!</p>
+        <label>Добро пожаловать в чат!</label><br>
+        <br>
         <form hx-post="/start" hx-target="#content" hx-swap="innerHTML">
           <button type="submit">Next</button>
         </form>

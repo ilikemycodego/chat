@@ -8,28 +8,24 @@
 
 
 
-
-
-
-
-
 <!--  -->
 {{ define "get__code" }}
+<div class="form-container">
+    <form id="code-form">
 
-<p>Введите код из письма для старта.</p>
+        <div class="form-field">
+            <input type="hidden" id="email-hidden" name="email" value="{{.Email}}">
 
-<!-- Скрыто передаём email, чтобы знать кому проверять код -->
-<form>
-    <input type="hidden" id="email" name="email" value="{{.Email}}">
+            <label for="code-input">Введите код из письма:</label>
+            <br>
+            <input type="text" id="code-input" name="code" placeholder="Введите код">
+        </div>
 
-    <input type="text" id="code" name="code" placeholder="Введите код"><br>
-</form>
-<br>
-
-<button hx-post="/verify-code" hx-target="#content" hx-swap="innerHTML" hx-include="#email,#code">
-    Старт
-</button>
-
-<button hx-get="/" hx-target="body" hx-swap="innerHTML">Back</button>
-
+        <div class="form-buttons">
+            <button type="button" hx-post="/verify-code" hx-target="#content" hx-swap="innerHTML"
+                hx-include="#email-hidden,#code-input">Старт</button><br>
+            <button type="button" hx-get="/" hx-target="#content" hx-swap="innerHTML">Back</button>
+        </div>
+    </form>
+</div>
 {{ end }}

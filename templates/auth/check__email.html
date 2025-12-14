@@ -20,10 +20,9 @@
 
 <!--  -->
 {{ define "check__email" }}
-<div id="check__email">
-    <div id="maily-status">{{.Status}}</div>
-    <div id="save-btn-container">
-        <br>
+<div id="check-email-status">
+    <div>{{.Status}}</div>
+    <div class="form-buttons">
         <button type="submit" {{if not .Valid}}disabled{{end}}>Получить код</button>
     </div>
 </div>
