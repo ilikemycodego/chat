@@ -1,0 +1,22 @@
+<!--  -->
+
+
+
+
+
+
+
+
+
+
+<!--  -->
+{{ define "user__setting" }}
+<div class="form-container">
+    <button type="button" hx-get="/name-setting" hx-target="#content" hx-swap="innerHTML">Имя</button>
+    <br>
+    <button type="button" hx-get="/name-setting" hx-target="#content" hx-swap="innerHTML">Почта</button>
+</div>
+
+<button type="button" hx-get="/" hx-target="body" hx-swap="innerHTML">Back</button>
+
+{{ end }}

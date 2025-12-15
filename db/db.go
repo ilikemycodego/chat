@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -18,38 +21,31 @@ func InitDB() {
 		return
 	}
 
-	// Пути к .env только для Linux
+	// Пути к .env
 	paths := []string{
-		"/var/www/auth/.env", // VPS
-		"../.env",            // локально рядом с проектом / бинарником
+		"/var/www/auth/.env",
+		"../.env",
 	}
 
-	envLoaded := false
 	for _, path := range paths {
 		if err := godotenv.Load(path); err == nil {
 			log.Println("📄 Загружен .env:", path)
-			envLoaded = true
 			break
 		}
 	}
 
-	if !envLoaded {
-		log.Println("⚠️ .env не найден — используются переменные среды")
-	}
-
-	// Получение данных из переменных среды
+	// Переменные окружения
 	user := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
 	dbname := os.Getenv("DB_NAME")
 	host := os.Getenv("DB_HOST")
 	sslmode := os.Getenv("DB_SSLMODE")
 
-	// Формируем DSN
-	dsn := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
+	dsn := fmt.Sprintf(
+		"postgres://%s:%s@%s/%s?sslmode=%s",
 		user, password, host, dbname, sslmode,
 	)
 
-	// Подключение к базе
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -65,18 +61,44 @@ func InitDB() {
 
 	log.Println("✅ Подключение к БД установлено!")
 
-	// Выполнение миграций (если есть файл)
-	sqlFile := "db/migrations/auth.sql"
-	if _, err := os.Stat(sqlFile); err == nil {
-		sqlBytes, err := os.ReadFile(sqlFile)
+	// ─────────────────────────────
+	// Запуск миграций
+	// ─────────────────────────────
+	runMigrations(ctx)
+
+	log.Println("✅ Таблицы готовы!")
+}
+
+func runMigrations(ctx context.Context) {
+	dir := "db/migrations"
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		log.Println("⚠️ Каталог миграций не найден:", dir)
+		return
+	}
+
+	// Сортировка файлов: 001_, 002_ ...
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Name() < entries[j].Name()
+	})
+
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".sql") {
+			continue
+		}
+
+		path := filepath.Join(dir, e.Name())
+
+		sqlBytes, err := os.ReadFile(path)
 		if err != nil {
-			log.Fatalf("❌ Не удалось прочитать файл миграции: %v", err)
+			log.Fatalf("❌ Ошибка чтения %s: %v", path, err)
 		}
-		if _, err = DB.Exec(ctx, string(sqlBytes)); err != nil {
-			log.Fatalf("❌ Ошибка миграции: %v", err)
+
+		if _, err := DB.Exec(ctx, string(sqlBytes)); err != nil {
+			log.Fatalf("❌ Ошибка выполнения %s: %v", path, err)
 		}
-		log.Println("✅ Таблицы готовы!")
-	} else {
-		log.Println("⚠️ Файл миграций не найден:", sqlFile)
+
+		log.Println("➡️ Миграция выполнена:", e.Name())
 	}
 }

@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
+	"unicode"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -64,6 +66,23 @@ func createSession(userID string) (string, error) {
 }
 
 // Поиск или создание нового пользователя (без роли)
+
+// sanitizeUsername убирает все символы кроме букв, цифр и подчеркиваний
+func sanitizeUsername(s string) string {
+	var b strings.Builder
+	for _, r := range s {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' {
+			b.WriteRune(r)
+		}
+	}
+	result := b.String()
+	if result == "" {
+		return "amigo"
+	}
+	return result
+}
+
+// Поиск или создание нового пользователя (без роли)
 func getOrCreateUser(email string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -75,19 +94,31 @@ func getOrCreateUser(email string) (string, error) {
 		`SELECT id FROM users WHERE email = $1`,
 		email,
 	).Scan(&id)
-
 	if err == nil {
 		return id, nil
 	}
 
-	// создаём (без падения при гонке)
+	// создаём новый ID
 	newID := uuid.New().String()
 
+	username := "amigo"
+	nick := "amigo"
+
+	if email != "" && strings.Contains(email, "@") {
+		parts := strings.Split(email, "@")
+		base := sanitizeUsername(parts[0])
+		username = base
+		nick, err = generateUniqueNick(base)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	_, err = db.DB.Exec(ctx, `
-		INSERT INTO users (id, email, name)
-		VALUES ($1, $2, 'amigo')
-		ON CONFLICT (email) DO NOTHING
-	`, newID, email)
+        INSERT INTO users (id, email, name, nick)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (email) DO NOTHING
+    `, newID, email, username, nick)
 	if err != nil {
 		return "", err
 	}
@@ -97,7 +128,6 @@ func getOrCreateUser(email string) (string, error) {
 		`SELECT id FROM users WHERE email = $1`,
 		email,
 	).Scan(&id)
-
 	if err != nil {
 		return "", err
 	}

@@ -1,0 +1,21 @@
+<!--  -->
+
+
+
+
+
+
+
+
+
+
+<!--  -->
+{{ define "check__name" }}
+<div id="check-name-status">
+    <div>{{.Status}}</div>
+    <div class="form-buttons">
+        <button type="submit" {{if not .Valid}}disabled{{end}}>Изменить</button>
+    </div>
+</div>
+
+{{ end }}

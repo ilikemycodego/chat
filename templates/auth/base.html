@@ -39,7 +39,11 @@
       {{if .Name}}
 
       <div class="greeting">
-        <span>{{.Name}}</span><span>&#9881;</span>
+        <span>{{.Name}}</span><span>
+          <a class="gear" href="/setting" hx-get="/setting" hx-target="#content" hx-swap="innerHTML">
+            &nbsp;&nbsp;&#9881;
+          </a>
+        </span>
 
 
       </div>

@@ -1,0 +1,33 @@
+<!--  -->
+
+
+
+
+
+
+
+
+
+
+<!--  -->
+{{ define "name__setting" }}
+
+<div class="form-container">
+    <form id="name-form" method="POST" hx-post="/get-password" hx-target="#content" hx-swap="innerHTML">
+        <div class="form-field">
+            <label for="name-input">Напишите имя:</label><br>
+            <br>
+            <input type="text" id="name-input" name="name" value="{{.Name}}" placeholder="@gmail.com" minlength="13"
+                maxlength="50" hx-post="/check-name" hx-trigger="keyup changed delay:300ms"
+                hx-target="#check-name-status" hx-swap="innerHTML">
+        </div>
+
+        {{ template "check__name" . }}
+
+        <div class="form-buttons">
+            <button type="button" hx-get="/" hx-target="body" hx-swap="innerHTML">Back</button>
+        </div>
+    </form>
+</div>
+
+{{ end }}

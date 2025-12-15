@@ -73,6 +73,11 @@ html, body {
 
 a {
     color: var(--link-color);
+    text-decoration: none;
+}
+
+.gear {
+    font-size: 22px; /* размер шрифта */
 }
 
 /* кнопки и инпуты */
