@@ -44,11 +44,15 @@
             &nbsp;&nbsp;&#9881;
           </a>
         </span>
-
-
       </div>
 
-      <div class="content" id="content"></div>
+      <div class="content" id="content">
+
+        <div id="ad" hx-get="/robi" hx-trigger="load" hx-trigger="load delay:10s" hx-swap="innerHTML" hx-select="">
+          🛰️ Loading Ad... &nbsp; <span class="pulse-dot"></span>
+        </div>
+
+      </div>
       {{end}}
     </div>
   </div>

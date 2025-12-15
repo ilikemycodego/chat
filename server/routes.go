@@ -3,6 +3,7 @@ package server
 import (
 	"chat/auth"
 	"chat/middleware"
+	"chat/proxy"
 	"chat/setting"
 	"html/template"
 
@@ -11,6 +12,9 @@ import (
 
 // RegisterRoutes регистрирует все маршруты
 func RegisterRoutes(m *mux.Router, tmpl *template.Template) {
+
+	// 🛰️ Подключаем все прокси
+	proxy.RobiProxy(m)
 
 	// Основной маршрут
 
